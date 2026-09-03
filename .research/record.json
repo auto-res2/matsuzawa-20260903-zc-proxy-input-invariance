@@ -16737,6 +16737,156 @@
           ]
         }
       ],
+      "charts": [
+        {
+          "path": "delta_rho.png",
+          "format": "png",
+          "spec": {
+            "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+            "background": "#fcfcfb",
+            "width": 260,
+            "height": 200,
+            "title": {
+              "text": "Spearman rho with NAS-Bench-201 test accuracy",
+              "subtitle": "1000 architectures, no training; input swapped real -> N(0,1) noise",
+              "fontSize": 12,
+              "subtitleFontSize": 10,
+              "anchor": "start",
+              "color": "#1a1a19",
+              "subtitleColor": "#5c5b55"
+            },
+            "data": {
+              "values": [
+                {
+                  "proxy": "jacob_cov",
+                  "condition": "CIFAR-10 (real)",
+                  "rho": "metric:comparative-1-jacobcov-cifar10.spearman_rho"
+                },
+                {
+                  "proxy": "jacob_cov",
+                  "condition": "N(0,1) noise",
+                  "rho": "metric:proposed-jacobcov-randinput.spearman_rho"
+                },
+                {
+                  "proxy": "snip",
+                  "condition": "CIFAR-10 (real)",
+                  "rho": "metric:comparative-3-snip-cifar10.spearman_rho"
+                },
+                {
+                  "proxy": "snip",
+                  "condition": "N(0,1) noise",
+                  "rho": "metric:comparative-4-snip-randinput.spearman_rho"
+                },
+                {
+                  "proxy": "synflow",
+                  "condition": "CIFAR-10 (real)",
+                  "rho": "metric:comparative-5-synflow-cifar10.spearman_rho"
+                },
+                {
+                  "proxy": "synflow",
+                  "condition": "N(0,1) noise",
+                  "rho": "metric:comparative-6-synflow-randinput.spearman_rho"
+                }
+              ]
+            },
+            "encoding": {
+              "x": {
+                "field": "proxy",
+                "type": "nominal",
+                "title": null,
+                "axis": {
+                  "labelFontSize": 11,
+                  "labelAngle": 0,
+                  "labelColor": "#1a1a19",
+                  "domainColor": "#c3c2b7",
+                  "tickColor": "#c3c2b7"
+                }
+              },
+              "xOffset": {
+                "field": "condition",
+                "type": "nominal"
+              },
+              "y": {
+                "field": "rho",
+                "type": "quantitative",
+                "title": "Spearman rho",
+                "scale": {
+                  "domain": [
+                    0,
+                    0.9
+                  ]
+                },
+                "axis": {
+                  "labelFontSize": 10,
+                  "titleFontSize": 11,
+                  "labelColor": "#5c5b55",
+                  "titleColor": "#1a1a19",
+                  "gridColor": "#e8e7e1",
+                  "domainColor": "#c3c2b7",
+                  "tickColor": "#c3c2b7"
+                }
+              },
+              "color": {
+                "field": "condition",
+                "type": "nominal",
+                "scale": {
+                  "domain": [
+                    "CIFAR-10 (real)",
+                    "N(0,1) noise"
+                  ],
+                  "range": [
+                    "#2a78d6",
+                    "#eb6834"
+                  ]
+                },
+                "legend": {
+                  "title": null,
+                  "orient": "top",
+                  "labelFontSize": 10,
+                  "labelColor": "#1a1a19",
+                  "symbolType": "square"
+                }
+              }
+            },
+            "layer": [
+              {
+                "mark": {
+                  "type": "bar",
+                  "cornerRadiusEnd": 4,
+                  "stroke": "#fcfcfb",
+                  "strokeWidth": 2
+                }
+              },
+              {
+                "mark": {
+                  "type": "text",
+                  "dy": -6,
+                  "fontSize": 9,
+                  "color": "#5c5b55"
+                },
+                "encoding": {
+                  "text": {
+                    "field": "rho",
+                    "type": "quantitative",
+                    "format": ".3f"
+                  }
+                }
+              }
+            ],
+            "config": {
+              "view": {
+                "stroke": null
+              },
+              "font": "sans-serif"
+            }
+          },
+          "renders": [
+            {
+              "renderer": "vl-convert-python 1.9.0"
+            }
+          ]
+        }
+      ],
       "notes": [
         "判定基準と予測区間（実験前に凍結。record はまだこれらをモデル化しないので、ここと論文の本文に記す）",
         "C1 判定基準: |delta_rho_jacobcov| <= 0.10 で支持、超えれば棄却。予測区間 0.00-0.05。参考として rho_jacobcov_real は文献値 0.73 前後。",
