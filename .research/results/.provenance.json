@@ -43,6 +43,17 @@
         "evaluate": "true"
       },
       "parameters": {}
+    },
+    "comparative-4-snip-randinput": {
+      "execution_id": "60a9f869-481c-4e9e-8f02-9da508a1e1bc",
+      "commit_hash": "be1541600719e31c9b7abe7bc4402c1459feab68",
+      "overrides": {
+        "run": "comparative-4-snip-randinput",
+        "results_dir": ".research/results",
+        "mode": "full",
+        "evaluate": "true"
+      },
+      "parameters": {}
     }
   }
 }

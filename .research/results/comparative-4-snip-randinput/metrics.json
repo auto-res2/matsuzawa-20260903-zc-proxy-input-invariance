@@ -1,0 +1,9 @@
+{
+ "best_true_rank_in_top_10": 35.0,
+ "kendall_tau": 0.4725525369525453,
+ "kendall_tau_top_10pct": -0.0848395686084481,
+ "precision_at_top_10pct": 0.36,
+ "selection_regret_at_1": 2.8200000000000074,
+ "spearman_rho": 0.6457617320733746,
+ "spearman_rho_top_10pct": -0.16842067658448004
+}
