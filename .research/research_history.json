@@ -254,11 +254,122 @@
             }
           ]
         },
-        "run_stage": "full"
+        "run_stage": "full",
+        "experimental_results": {
+          "metrics_data": {
+            "comparative-1-jacobcov-cifar10": {
+              "best_true_rank_in_top_10": 78.0,
+              "kendall_tau": 0.5551029512665429,
+              "kendall_tau_top_10pct": 0.2557364986761833,
+              "precision_at_top_10pct": 0.21,
+              "selection_regret_at_1": 4.200000000000003,
+              "spearman_rho": 0.7146105164374074,
+              "spearman_rho_top_10pct": 0.3706731311572258
+            },
+            "comparative-2-jacobcov-cifar10rep": {
+              "best_true_rank_in_top_10": 125.0,
+              "kendall_tau": 0.5538764834273731,
+              "kendall_tau_top_10pct": 0.22366795360409047,
+              "precision_at_top_10pct": 0.11,
+              "selection_regret_at_1": 1.6500000000000057,
+              "spearman_rho": 0.7126897753645561,
+              "spearman_rho_top_10pct": 0.3180199134366199
+            },
+            "comparative-3-snip-cifar10": {
+              "best_true_rank_in_top_10": 35.0,
+              "kendall_tau": 0.4348405713948128,
+              "kendall_tau_top_10pct": -0.12056149223305784,
+              "precision_at_top_10pct": 0.38,
+              "selection_regret_at_1": 2.8200000000000074,
+              "spearman_rho": 0.59793993762054,
+              "spearman_rho_top_10pct": -0.22088784053222163
+            },
+            "comparative-4-snip-randinput": {
+              "best_true_rank_in_top_10": 35.0,
+              "kendall_tau": 0.4725525369525453,
+              "kendall_tau_top_10pct": -0.0848395686084481,
+              "precision_at_top_10pct": 0.36,
+              "selection_regret_at_1": 2.8200000000000074,
+              "spearman_rho": 0.6457617320733746,
+              "spearman_rho_top_10pct": -0.16842067658448004
+            },
+            "comparative-5-synflow-cifar10": {
+              "best_true_rank_in_top_10": 16.0,
+              "kendall_tau": 0.5955824412417791,
+              "kendall_tau_top_10pct": 0.20841105857077544,
+              "precision_at_top_10pct": 0.51,
+              "selection_regret_at_1": 0.8700000000000045,
+              "spearman_rho": 0.7935009281956833,
+              "spearman_rho_top_10pct": 0.30599169739286847
+            },
+            "comparative-6-synflow-randinput": {
+              "best_true_rank_in_top_10": 16.0,
+              "kendall_tau": 0.5955824412417791,
+              "kendall_tau_top_10pct": 0.20841105857077544,
+              "precision_at_top_10pct": 0.51,
+              "selection_regret_at_1": 0.8700000000000045,
+              "spearman_rho": 0.7935009281956833,
+              "spearman_rho_top_10pct": 0.30599169739286847
+            },
+            "comparative-7-jacobcov-realvsrand": {
+              "best_true_rank_in_top_10": 1.0,
+              "kendall_tau": 0.788138258133391,
+              "kendall_tau_top_10pct": 0.40727272727272734,
+              "precision_at_top_10pct": 0.55,
+              "selection_regret_at_1": 0.13057704369117573,
+              "spearman_rho": 0.9262861910032567,
+              "spearman_rho_top_10pct": 0.5777137713771376
+            },
+            "proposed-jacobcov-randinput": {
+              "best_true_rank_in_top_10": 196.0,
+              "kendall_tau": 0.45314579802210475,
+              "kendall_tau_top_10pct": 0.16927320626661654,
+              "precision_at_top_10pct": 0.06,
+              "selection_regret_at_1": 4.050000000000011,
+              "spearman_rho": 0.6041599516363598,
+              "spearman_rho_top_10pct": 0.24260811808048022
+            }
+          },
+          "result_figures": [
+            "chart/delta_rho.png",
+            "comparative-1-jacobcov-cifar10/scatter.pdf",
+            "comparative-2-jacobcov-cifar10rep/scatter.pdf",
+            "comparative-3-snip-cifar10/scatter.pdf",
+            "comparative-4-snip-randinput/scatter.pdf",
+            "comparative-5-synflow-cifar10/scatter.pdf",
+            "comparative-6-synflow-randinput/scatter.pdf",
+            "comparative-7-jacobcov-realvsrand/scatter.pdf",
+            "proposed-jacobcov-randinput/scatter.pdf"
+          ]
+        },
+        "experimental_analysis": {
+          "analysis_report": "全 8 ラン（コミット be15416、各 1 dispatch、RIKYU GB200）が完了し、airas-eval (nas_pre_training) の指標を record に実体化した。主要指標 spearman_rho: jacob_cov 実データ 0.7146 / 乱数 0.6042（差 0.110）、snip 0.5979 / 0.6458（差 −0.048）、synflow 0.7935 / 0.7935（差 0、7 指標すべて同一）、jacob_cov シード複製 0.7127（シード差 0.002）、乱数 vs 実データのスコア相関 0.9263。\n判定（凍結基準）: C1 棄却（|Δρ|=0.110 > 0.10、予測区間 0.00–0.05 も外れ）、C2 支持（|Δρ|=0.048 ≤ 0.10、符号は予測外の負）、C3 支持（Δρ=0、実験系は健全）、C4 棄却（0.110 > 0.002+0.05、入力差し替えはシード揺らぎで説明できない）、C5 支持（0.926 < 0.999、介入はスコアに到達）。\n結論: 「ZC proxy はデータを見ていない」という一般命題は誤りで、jacob_cov は実データに依存し、snip は依存しない。最良の proxy は入力を一切使わない synflow であり、どのデータを渡すかよりどの proxy を使うかの方が効く。C1 は基準 0.10 に対し僅差の棄却であり、効果は実在するが小さい。\n再現性: 2026-09-02 の同一設計の先行ランと 8 ラン全指標が一致した（アーキテクチャ集合とシードを固定しているため）。\n検証: CI ゲート (Verify Record, run 33779093014) は緑。provenance は 8 ディレクトリ × 5 ファイルが Seyval の保存出力とバイト一致、宣言 params (mode=full, evaluate=true) と dispatch argv が一致、図は宣言 spec からの再描画と一致、record 履歴は包含を満たす。"
+        },
+        "decision": {
+          "action": "complete",
+          "reasoning": "full 規模で全 8 ランが完了し、凍結した判定基準に対する結果が確定した。"
+        }
       }
     ]
   },
   "additional_data": {
-    "note": "2026-09-03: 2026-09-02 の同一課題の再実行。仮説・設計は同一で、記録の木構造 (hypotheses > claims > designs > runs > results) と CI ゲート (Verify Record / ブランチ保護) の実地検証を兼ねる。"
+    "note": "2026-09-03: 2026-09-02 の同一課題の再実行。仮説・設計は同一で、記録の木構造 (hypotheses > claims > designs > runs > results) と CI ゲート (Verify Record / ブランチ保護) の実地検証を兼ねる。",
+    "seyval": {
+      "repository_id": "817dba53-89f4-4e08-94ef-7c54049e6f10",
+      "analysis_id": "3270d3dd-fe78-48ee-821e-8fc5819e40d4",
+      "commit": "be1541600719e31c9b7abe7bc4402c1459feab68",
+      "runs": {
+        "comparative-1-jacobcov-cifar10": "6edf69b5-368d-4c0d-85f0-57780806763c",
+        "proposed-jacobcov-randinput": "ddddf4b0-f395-448a-8d25-c988317791a8",
+        "comparative-2-jacobcov-cifar10rep": "f7ed8fb5-6ebb-4506-8079-2d96a426fcb4",
+        "comparative-3-snip-cifar10": "bd0654f7-a6b7-4d87-b5f3-9c243667d464",
+        "comparative-4-snip-randinput": "60a9f869-481c-4e9e-8f02-9da508a1e1bc",
+        "comparative-5-synflow-cifar10": "20314995-703b-4ef9-8d3a-55e685f1f06e",
+        "comparative-6-synflow-randinput": "6369b671-10a3-4404-8976-8d01662b24c8",
+        "comparative-7-jacobcov-realvsrand": "081441e7-e796-4fd3-9336-1138c68be5df"
+      }
+    },
+    "freeze_commit": "e8ddfa0a5ce4ae23a3069bd6cca47e79194e22d3",
+    "verify_record_run": "https://github.com/auto-res2/matsuzawa-20260903-zc-proxy-input-invariance/actions/runs/33779093014"
   }
 }
