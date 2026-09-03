@@ -1,1 +1,264 @@
-{}
+{
+  "research_topic": "training-free NAS の zero-cost proxy が入力データに本当に依存しているかの定量的検証。NAS-Bench-201 上で、実データ(CIFAR-10)ミニバッチと N(0,1) 乱数入力のそれぞれで zero-cost proxy (jacob_cov / snip / synflow)を計算し、真の精度との順位相関の差 delta_rho を測る。アーキテクチャの学習は一切行わず、真値は表形式ベンチマークの公表値を参照する。評価指標は外部の固定された評価層 airas-eval の nas_pre_training タスクで算出し、実験コードは指標を一切計算しない。",
+  "queries": [
+    "zero-cost proxies neural architecture search",
+    "training-free NAS",
+    "NAS-Bench-201 benchmark",
+    "zero-cost proxy bias critique"
+  ],
+  "research_study_list": [
+    {
+      "title": "Zero-Cost Proxies for Lightweight NAS",
+      "abstract": "We propose a series of zero-cost proxies, based on recent pruning literature, that use just a single minibatch of training data to compute a model's score. Spearman's rank correlation between final validation accuracy and our best zero-cost proxy on NAS-Bench-201 is 0.82, compared to 0.61 for EcoNAS.",
+      "meta_data": {
+        "arxiv_id": "2101.08134",
+        "venue": "ICLR 2021",
+        "published_date": "2021-01-20",
+        "pdf_url": "https://arxiv.org/pdf/2101.08134",
+        "github_url": "https://github.com/mohsaied/zero-cost-nas",
+        "authors": [
+          "Mohamed S. Abdelfattah",
+          "Abhinav Mehrotra",
+          "Lukasz Dudziak",
+          "Nicholas D. Lane"
+        ],
+        "peer_review_status": "yes"
+      },
+      "llm_extracted_info": {
+        "main_contributions": "枝刈り(pruning-at-initialization)の saliency 指標を NAS のアーキテクチャ採点に転用し、単一ミニバッチの forward/backward 1 回で計算できる zero-cost proxy 群(grad_norm, snip, grasp, fisher, synflow, jacob_cov)を定義。NAS-Bench-201 全 15,625 モデルで真の精度との Spearman 順位相関を報告した。",
+        "methodology": "各パラメータの saliency を全パラメータで総和してネットワーク 1 個のスコアとする。snip は |dL/dtheta ⊙ theta|、grasp は Hessian を用いる版、synflow は dL/dtheta ⊙ theta。**synflow の損失は全パラメータの積であり、データを一切必要としない**。jacob_cov はミニバッチ内の異なる入力に対する活性/ヤコビアンの相関に基づく(Mellor et al. の NASWOT 由来)。",
+        "experimental_setup": "NAS-Bench-201 の全 15,625 モデル、CIFAR-10 / CIFAR-100 / ImageNet16-120。Table 1 の CIFAR-10 Spearman rho: grad_norm 0.58, snip 0.58, grasp 0.48, fisher 0.36, synflow 0.74, jacob_cov 0.73, vote 0.82。",
+        "limitations": "各 proxy が入力データのどの情報をどれだけ使っているかは検証されていない。synflow がデータ非依存でありながら最高性能である事実は本文で指摘されるが、他の『データ依存』proxy が実際に入力に依存しているかという問いは立てられていない。"
+      }
+    },
+    {
+      "title": "Neural Architecture Search without Training",
+      "abstract": "We examine the overlap of activations between datapoints in untrained networks and motivate how this gives a measure indicative of trained performance (NASWOT). Search in seconds on NAS-Bench-101/201, NATS-Bench, NDS.",
+      "meta_data": {
+        "arxiv_id": "2006.04647",
+        "venue": "ICML 2021",
+        "published_date": "2021-06-11",
+        "pdf_url": "https://arxiv.org/pdf/2006.04647",
+        "github_url": "https://github.com/BayesWatch/nas-without-training",
+        "authors": [
+          "Joseph Mellor",
+          "Jack Turner",
+          "Amos Storkey",
+          "Elliot J. Crowley"
+        ],
+        "peer_review_status": "yes"
+      },
+      "llm_extracted_info": {
+        "main_contributions": "未学習ネットワークの ReLU 活性の二値符号間 Hamming 距離カーネル K_H から score = log|K_H| を定義し、学習後精度と相関することを示した。学習なしの NAS を数十秒で実行する。",
+        "methodology": "ミニバッチの各入力が誘導する活性パターン間の Hamming 距離でカーネルを構成し log-determinant をスコアとする。",
+        "limitations": "**入力データへの依存性は Fig.5 のアブレーションで、CIFAR-100 の 10 アーキテクチャに正規乱数入力を与えた箱ひげ図により『傾向はほぼ変わらない』と定性的に述べるのみ**であり、探索空間規模での順位相関としての定量化は存在しない。本研究が埋める空白はここである。"
+      }
+    },
+    {
+      "title": "Revisiting Training-free NAS Metrics: An Efficient Training-based Method",
+      "abstract": "We revisit training-free metrics and find that (1) the number of parameters (#Param) is overlooked but surprisingly effective, (2) recent training-free metrics largely rely on #Param information to rank networks. Their performance drops dramatically when #Param information is not available.",
+      "meta_data": {
+        "arxiv_id": "2211.08666",
+        "venue": "WACV 2023",
+        "published_date": "2022-11-16",
+        "pdf_url": "https://arxiv.org/pdf/2211.08666",
+        "doi": "10.1109/wacv56688.2023.00473",
+        "authors": [
+          "Taojiannan Yang",
+          "Linjie Yang",
+          "Xiaojie Jin",
+          "Chen Chen"
+        ],
+        "peer_review_status": "yes"
+      },
+      "llm_extracted_info": {
+        "main_contributions": "training-free 指標の順位付け能力の大部分が #Param との相関に由来することを示した。NAS-Bench-201 での #Param との Kendall tau は LR1 0.39, NTK 0.30, LR2 0.56。パラメータ数を揃えた探索空間では性能が劇的に低下する。",
+        "methodology": "NAS-Bench-201 から #Param が同一のモデル群(8 グループ)を切り出し、その中で各指標の探索性能を比較する。",
+        "limitations": "統制するのは #Param(アーキテクチャ側)であって入力データ側ではない。『指標が入力データを使っていない』という相補的な仮説は検証されていない。本研究はこの相補側を、入力を乱数に差し替える介入で直接検証する。"
+      }
+    },
+    {
+      "title": "NAS-Bench-201: Extending the Scope of Reproducible Neural Architecture Search",
+      "abstract": "NAS-Bench-201 has a fixed search space of 15,625 cell candidates (4 nodes, 5 operations) and provides training logs and performance for each candidate on three datasets, allowing researchers to avoid repetitive training.",
+      "meta_data": {
+        "arxiv_id": "2001.00326",
+        "venue": "ICLR 2020",
+        "published_date": "2020-01-02",
+        "pdf_url": "https://arxiv.org/pdf/2001.00326",
+        "authors": [
+          "Xuanyi Dong",
+          "Yi Yang"
+        ],
+        "peer_review_status": "yes"
+      },
+      "llm_extracted_info": {
+        "main_contributions": "15,625 個の cell 候補すべてについて CIFAR-10 / CIFAR-100 / ImageNet16-120 の学習済み精度を表形式で公開。学習を一切行わずに真の精度を参照できる。",
+        "experimental_setup": "cell は 4 ノード 6 エッジの DAG、演算は none / skip_connect / nor_conv_1x1 / nor_conv_3x3 / avg_pool_3x3 の 5 種。本研究はこの表を真値(reference_scores)として用いる。"
+      }
+    },
+    {
+      "title": "NAS-Bench-Suite-Zero: Accelerating Research on Zero Cost Proxies",
+      "abstract": "We evaluate 13 ZC proxies across 28 tasks, creating the largest dataset for ZC proxies. We run a large-scale analysis including a bias analysis, and the first information-theoretic analysis which concludes that ZC proxies capture substantial complementary information.",
+      "meta_data": {
+        "venue": "NeurIPS 2022",
+        "published_date": "2022",
+        "pdf_url": "https://openreview.net/forum?id=yWhuIjIjH8k",
+        "authors": [
+          "Arjun Krishnakumar",
+          "Colin White",
+          "Arber Zela",
+          "Renbo Tu",
+          "Mahmoud Safari",
+          "Frank Hutter"
+        ],
+        "peer_review_status": "yes"
+      },
+      "llm_extracted_info": {
+        "main_contributions": "13 の ZC proxy を 28 タスクで統一実装のもと評価し、cell size などのバイアス分析を行った。真の上位 10% に限定した順位相関のプロトコルを定めた(本研究の supporting metric はこれに従う)。",
+        "limitations": "バイアス分析はアーキテクチャ側(cell size)に限られ、入力データ側の寄与は分析されていない。"
+      }
+    }
+  ],
+  "research_hypothesis": {
+    "open_problems": "zero-cost proxy (ZC proxy) は『単一ミニバッチの実データ』を用いてアーキテクチャを採点すると説明され、その正当化も入力に対する応答(活性の多様性、損失勾配)に置かれている。しかし、その説明が実際に成立しているかは定量的に検証されていない。傍証は 2 つある。第一に、Abdelfattah らの synflow は損失を全パラメータの積として定義するため入力データを一切使わないにもかかわらず、NAS-Bench-201 CIFAR-10 で最高の Spearman rho = 0.74 を示す。第二に、Yang らは training-free 指標の順位付け能力の大部分が #Param との相関(Kendall tau で最大 0.56)に由来し、パラメータ数を揃えると性能が崩れることを示した。両者は『ZC proxy はデータではなくアーキテクチャの規模を測っている』という仮説を示唆するが、入力データ側を直接統制した検証は存在しない。Mellor らの NASWOT 論文は乱数入力のアブレーションを持つが、CIFAR-100 の 10 アーキテクチャの箱ひげ図で『傾向はほぼ変わらない』と定性的に述べるのみで、探索空間規模の順位相関としての定量化はない。",
+    "method": "入力データの実効的寄与を、真の精度との順位相関の差 delta_rho = rho_real - rho_rand として定量する。同一のアーキテクチャ集合・同一の初期化シードに対し、ZC proxy の入力だけを『CIFAR-10 の実ミニバッチ』から『同じ形状・同じ正規化統計の N(0,1) 乱数テンソル』に差し替え、それ以外を完全に固定する。アーキテクチャの学習は一切行わず、真値は NAS-Bench-201 の公表済み CIFAR-10 テスト精度を参照する。評価指標は外部の固定された評価層 airas-eval の nas_pre_training タスクで算出し、実験コードは指標を一切計算しない(実験コードは proxy スコア predicted_scores と真値 reference_scores を書き出すだけ)。統制として 3 つを置く。(1) データ非依存対照: synflow は構成上入力を使わないため delta_rho は厳密に 0 でなければならず、0 でなければ実験系の欠陥を意味する。(2) シードノイズ床: 実データを保ったままシード三つ組だけを変えた複製ランを走らせ、入力差し替えの効果をシード揺らぎと同じ尺度で比較する。(3) スコア水準の操作チェック: 実入力スコアと乱数入力スコアの間の Spearman 相関を測り、『スコア自体は動くが精度との順位相関は動かない』のか『スコアすら動かない』のかを分離する。",
+    "experimental_setup": "探索空間: NAS-Bench-201 (15,625 cell)。評価対象は固定シード 2026 で一様抽出した 1,000 アーキテクチャ(full)。真値: NAS-Bench-201 の cifar10 eval_acc1es (テスト精度)。参照表 nb201_all.pickle と CIFAR-10 は RIKYU 上の /data1/rkp00041/rku00122/.airas-cache/ に既設のものを読み取り専用で使用する。proxy: jacob_cov, snip, synflow の 3 種。入力条件: 実 CIFAR-10 ミニバッチ (batch 128) と N(0,1) 乱数テンソル。各ランは 3 つの初期化シードで proxy を計算しその平均をアーキテクチャのスコアとする。学習は 0 エポック(forward/backward 各 1 回のみ)。実行環境は RIKYU (BYO Slurm, NVIDIA GB200, aarch64)。mode 別スケール: sanity=10 アーキ/1 シード(CPU 可)、pilot=200 アーキ/3 シード、full=1000 アーキ/3 シード。",
+    "primary_metric": "spearman_rho",
+    "supporting_metrics": [
+      "kendall_tau",
+      "spearman_rho_top_10pct",
+      "precision_at_top_10pct"
+    ],
+    "expected_result": "jacob_cov と snip の delta_rho は 0.00-0.05 程度(いずれも基準 0.10 以下)に収まり、rho_real は文献値(jacob_cov 0.73, snip 0.58)の前後になると予測する。synflow の delta_rho は厳密に 0(|delta_rho| <= 0.001)。シードのみを変えた複製ランの |delta_rho_seed| は 0.00-0.05 に収まり、入力差し替えの効果はこの床を超えない。実入力スコアと乱数入力スコアの Spearman 相関は 0.6-0.95 と予測する(スコアは動くが順位情報は保たれる)。",
+    "expected_conclusion": "『データ依存』とされる zero-cost proxy の順位付け能力は、実際の入力データの内容にほとんど依存しない。proxy スコアの値自体は入力で変わるが、真の精度との順位相関はシードを振り直した程度の差しか生まない。これは ZC proxy が測っているのが入力に対する応答ではなくアーキテクチャ固有の量(規模・接続構造)であることを支持し、Yang らの #Param 依存の指摘と整合する。反証条件: いずれかの proxy で delta_rho > 0.10 となれば、その proxy は実データを実質的に利用していることになり本仮説は棄却される。",
+    "experimental_code": ""
+  },
+  "experiment_history": {
+    "cycles": [
+      {
+        "experimental_design": {
+          "experiment_summary": "NAS-Bench-201 から固定シードで抽出した 1,000 アーキテクチャに対し、zero-cost proxy を (a) CIFAR-10 実ミニバッチ、(b) N(0,1) 乱数テンソル の 2 条件で計算し、NAS-Bench-201 公表の CIFAR-10 テスト精度との順位相関を airas-eval の nas_pre_training タスクで算出する。アーキテクチャの学習は一切行わない(0 エポック)。実験コードは指標を計算せず、.research/results/<run_id>/eval_inputs/nas_pre_training.json に predicted_scores(proxy スコア)と reference_scores(真の精度)を書き出すのみ。データ漏洩防止のため、proxy 計算にラベルは一切使用しない(snip の損失には乱数ラベルではなくネットワーク出力の総和を用いる標準実装に従う)。",
+          "compute_environment": {
+            "os": "Linux",
+            "arch": "aarch64",
+            "gpu_type": "NVIDIA GB200",
+            "gpu_count": 1,
+            "python_version": "3.11",
+            "description": "RIKYU (BYO Slurm cluster, partition=gpu, 4x GB200 per node, aarch64). Seyval BYO compute id byo:4f616e40-bb56-45aa-95b5-38fa4d2d0b8b. データセットと参照表は /data1/rkp00041/rku00122/.airas-cache/ を読み取り専用でバインドマウントして使用する。"
+          },
+          "evaluation_metrics": [
+            {
+              "name": "spearman_rho",
+              "description": "主要指標。proxy スコア(predicted_scores)と NAS-Bench-201 公表 CIFAR-10 テスト精度(reference_scores)の Spearman 順位相関。airas_eval.metrics.regression.spearman_rho が算出。実験コードは計算しない。"
+            },
+            {
+              "name": "kendall_tau",
+              "description": "支持指標。同じ 2 系列の Kendall tau-b。airas_eval.metrics.regression.kendall_tau。"
+            },
+            {
+              "name": "spearman_rho_top_10pct",
+              "description": "支持指標。真の精度が上位 10% の候補のみに限定した Spearman 順位相関 (NAS-Bench-Suite-Zero のプロトコル)。全体では順位を当てても上位を取りこぼす予測器を検出する。"
+            },
+            {
+              "name": "precision_at_top_10pct",
+              "description": "支持指標。予測上位 10% 集合と真の上位 10% 集合の重なり率。"
+            }
+          ],
+          "models_to_use": [
+            "NAS-Bench-201 cell search space (15,625 architectures; 4 nodes, 5 ops)"
+          ],
+          "datasets_to_use": [
+            "CIFAR-10 (cifar-10-batches-py, RIKYU 既設)",
+            "NAS-Bench-201 tabular benchmark (nb201_all.pickle, RIKYU 既設)"
+          ],
+          "proposed_method": {
+            "method_name": "ZC-RandInput (jacob_cov on N(0,1) noise)",
+            "description": "中心仮説の介入条件。jacob_cov を、CIFAR-10 実ミニバッチと同一形状・同一正規化統計の N(0,1) 乱数テンソルに対して計算する。それ以外(アーキテクチャ集合、初期化シード、バッチサイズ)は実データ条件と完全に同一。run_id = proposed-jacobcov-randinput。",
+            "training_config": {
+              "batch_size": 128,
+              "epochs": 0,
+              "seed": 0,
+              "additional_params": "seeds=[0,1,2]; n_archs=1000 (full) / 200 (pilot) / 10 (sanity); arch_sample_seed=2026"
+            }
+          },
+          "comparative_methods": [
+            {
+              "method_name": "jacob_cov on CIFAR-10 (reference)",
+              "description": "実データ参照条件。run_id = comparative-1-jacobcov-cifar10。seeds=[0,1,2]。",
+              "training_config": {
+                "batch_size": 128,
+                "epochs": 0,
+                "seed": 0,
+                "additional_params": "seeds=[0,1,2]"
+              }
+            },
+            {
+              "method_name": "jacob_cov on CIFAR-10, seed replicate (noise floor)",
+              "description": "シードノイズ床の統制。入力は実データのまま、初期化シード三つ組だけを変える。run_id = comparative-2-jacobcov-cifar10rep。seeds=[10,11,12]。",
+              "training_config": {
+                "batch_size": 128,
+                "epochs": 0,
+                "seed": 10,
+                "additional_params": "seeds=[10,11,12]"
+              }
+            },
+            {
+              "method_name": "snip on CIFAR-10",
+              "description": "第二の勾配ベース proxy の実データ条件。run_id = comparative-3-snip-cifar10。",
+              "training_config": {
+                "batch_size": 128,
+                "epochs": 0,
+                "seed": 0,
+                "additional_params": "seeds=[0,1,2]"
+              }
+            },
+            {
+              "method_name": "snip on N(0,1) noise",
+              "description": "第二の勾配ベース proxy の介入条件。run_id = comparative-4-snip-randinput。",
+              "training_config": {
+                "batch_size": 128,
+                "epochs": 0,
+                "seed": 0,
+                "additional_params": "seeds=[0,1,2]"
+              }
+            },
+            {
+              "method_name": "synflow on CIFAR-10 (data-free control)",
+              "description": "データ非依存対照。synflow の損失は全パラメータの積で入力を使わないため、乱数条件と厳密に一致しなければならない。run_id = comparative-5-synflow-cifar10。",
+              "training_config": {
+                "batch_size": 128,
+                "epochs": 0,
+                "seed": 0,
+                "additional_params": "seeds=[0,1,2]"
+              }
+            },
+            {
+              "method_name": "synflow on N(0,1) noise (data-free control)",
+              "description": "データ非依存対照の介入側。run_id = comparative-6-synflow-randinput。delta_rho は厳密に 0 が期待される。",
+              "training_config": {
+                "batch_size": 128,
+                "epochs": 0,
+                "seed": 0,
+                "additional_params": "seeds=[0,1,2]"
+              }
+            },
+            {
+              "method_name": "jacob_cov score-level agreement (manipulation check)",
+              "description": "スコア水準の操作チェック。predicted_scores に乱数入力での jacob_cov スコア、reference_scores に実入力での jacob_cov スコアを与え、両者の Spearman 相関を測る。1.0 に近ければ入力差し替えがスコアに届いていないことを、明確に 1 未満ならスコアは動いているのに精度との順位相関が動かないことを意味する。run_id = comparative-7-jacobcov-realvsrand。",
+              "training_config": {
+                "batch_size": 128,
+                "epochs": 0,
+                "seed": 0,
+                "additional_params": "seeds=[0,1,2]"
+              }
+            }
+          ]
+        },
+        "run_stage": "full"
+      }
+    ]
+  },
+  "additional_data": {
+    "note": "2026-09-03: 2026-09-02 の同一課題の再実行。仮説・設計は同一で、記録の木構造 (hypotheses > claims > designs > runs > results) と CI ゲート (Verify Record / ブランチ保護) の実地検証を兼ねる。"
+  }
+}
