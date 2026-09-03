@@ -10,6 +10,17 @@
         "evaluate": "true"
       },
       "parameters": {}
+    },
+    "proposed-jacobcov-randinput": {
+      "execution_id": "ddddf4b0-f395-448a-8d25-c988317791a8",
+      "commit_hash": "be1541600719e31c9b7abe7bc4402c1459feab68",
+      "overrides": {
+        "run": "proposed-jacobcov-randinput",
+        "results_dir": ".research/results",
+        "mode": "full",
+        "evaluate": "true"
+      },
+      "parameters": {}
     }
   }
 }
