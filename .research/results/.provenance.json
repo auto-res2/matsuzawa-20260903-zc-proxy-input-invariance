@@ -76,6 +76,17 @@
         "evaluate": "true"
       },
       "parameters": {}
+    },
+    "comparative-7-jacobcov-realvsrand": {
+      "execution_id": "081441e7-e796-4fd3-9336-1138c68be5df",
+      "commit_hash": "be1541600719e31c9b7abe7bc4402c1459feab68",
+      "overrides": {
+        "run": "comparative-7-jacobcov-realvsrand",
+        "results_dir": ".research/results",
+        "mode": "full",
+        "evaluate": "true"
+      },
+      "parameters": {}
     }
   }
 }
