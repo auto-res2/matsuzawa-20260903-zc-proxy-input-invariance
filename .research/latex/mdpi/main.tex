@@ -258,14 +258,135 @@ CIFAR-10 と NAS-Bench-201 の参照表は同クラスタ上の既設キャッ�
 \section{結果}
 \label{sec:results}
 
-% 実験実行後に記入する。主張 C1--C5 を第\ref{sec:claims}節で凍結した判定基準に
-% 照らして順に報告する。判定基準と予測区間は結果に合わせて変更しない。
-（実験実行前のため未記入。）
+全 8 ランは事前登録コミットの子孫にあたる単一コミット上で、1 ランにつき 1 回の dispatch として
+RIKYU 上で実行され、指標はすべて外部の評価層 airas-eval が算出した。
+各ランの実行 ID・コミット・出力ファイルは実行基盤の記録と突き合わせて検証されている。
+主要指標を表~\ref{tab:zc_summary} と図~\ref{fig:delta_rho} に示す。
+以下、主張 C1--C5 を第\ref{sec:claims}節で凍結した判定基準に照らして順に報告する。
+\textbf{判定基準と予測区間は実験実行前に凍結されており、結果に合わせて変更していない。}
+本文中の $\rho$ はすべて各ランの記録から直接引用した値であり、
+$\Delta\rho$ は引用した 2 値の差として筆者が計算したものである（記録はまだ派生値を
+モデル化しないため \texttt{unverified} マクロで明示する）。
+
+\InputIfFileExists{tables/zc_summary.tex}{}{}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.62\textwidth]{images/chart/delta_rho.png}
+\caption{入力条件ごとの Spearman 順位相関。学習は一切行っていない。
+synflow の 2 本は構成上入力を使わないため厳密に一致する（データ非依存対照）。
+図中の各値はランの記録から解決され、宣言した仕様から再描画して検証される。}
+\label{fig:delta_rho}
+\end{figure}
+
+\paragraph{C1（中心仮説：jacob\_cov の入力非依存性）— \textbf{棄却}.}
+$\rho_{\mathrm{real}} = \airasval{comparative-1-jacobcov-cifar10.spearman_rho}$、
+$\rho_{\mathrm{rand}} = \airasval{proposed-jacobcov-randinput.spearman_rho}$。
+両者の差は $\Delta\rho = \unverified{0.110}$ であり、判定基準 $|\Delta\rho| \le 0.10$ を上回った。
+したがって\textbf{本主張は棄却される}。予測区間 $0.00$--$0.05$ からも外れており、
+予測は二重に外した。なお $\rho_{\mathrm{real}}$ 自体は文献値 \unverified{0.73} に近く、
+実装が標準的な jacob\_cov を再現していることを示す。
+
+\paragraph{C2（snip の入力非依存性）— 支持.}
+$\rho_{\mathrm{real}} = \airasval{comparative-3-snip-cifar10.spearman_rho}$、
+$\rho_{\mathrm{rand}} = \airasval{comparative-4-snip-randinput.spearman_rho}$。
+差は $\Delta\rho = \unverified{-0.048}$ で $|\Delta\rho| \le 0.10$ を満たし、判定基準を通過した。
+符号が負である点は予測していなかった。すなわち\textbf{乱数入力の方がわずかに良い}。
+$\rho_{\mathrm{real}}$ は文献値 \unverified{0.58} に近い。
+
+\paragraph{C3（データ非依存対照）— 支持.}
+$\rho_{\mathrm{real}} = \airasval{comparative-5-synflow-cifar10.spearman_rho}$、
+$\rho_{\mathrm{rand}} = \airasval{comparative-6-synflow-randinput.spearman_rho}$。
+両者は同一の値であり、判定基準 $|\Delta\rho| \le 0.001$ を満たす。表~\ref{tab:zc_summary} のとおり
+synflow の 2 条件は 4 指標すべてで完全に一致しており、
+アーキテクチャ抽出・採点・評価の経路が条件間で何の差も生んでいないことを意味する。
+C1 と C2 で観測された差は、この経路に由来するものではない。
+
+\paragraph{C4（シードノイズ床との比較）— \textbf{棄却}.}
+入力を保ったまま初期化シードのみを変えた複製ランは
+$\rho_{\mathrm{rep}} = \airasval{comparative-2-jacobcov-cifar10rep.spearman_rho}$ を与え、
+C1 の $\rho_{\mathrm{real}}$ との差は $\Delta\rho_{\mathrm{seed}} = \unverified{0.002}$ にとどまった。
+判定基準 $|\Delta\rho_{\mathrm{jacob\_cov}}| \le |\Delta\rho_{\mathrm{seed}}| + 0.05$ に対し、
+C1 の $|\Delta\rho_{\mathrm{jacob\_cov}}| = \unverified{0.110}$ はこれを大きく上回る。
+したがって\textbf{本主張も棄却される}。
+シード揺らぎは予測区間 $0.00$--$0.05$ の下端に収まるほど小さく、
+入力差し替えの効果はそれとは桁の違う大きさである。
+
+\paragraph{C5（スコア水準の操作チェック）— 支持.}
+乱数入力スコアと実入力スコアの Spearman 相関は
+$\airasval{comparative-7-jacobcov-realvsrand.spearman_rho}$ であり、判定基準 $<0.999$ を満たす。
+介入はスコアそのものに到達しており、C1 の結果が
+「入力が差し替わっていなかった」ことの帰結でないことが確認された。
+一方でこの値は $1$ から大きくは離れておらず、
+スコアの順位情報の大半は入力を変えても保たれている。
+
+\paragraph{支持指標.}
+表~\ref{tab:zc_summary} のとおり、jacob\_cov では Kendall $\tau$、
+真の上位 10\% に限定した Spearman $\rho$、上位 10\% の一致率のいずれも
+主要指標と同じ向きで実データ条件が優る。
+ただし上位 10\% 系の指標はシード複製ランでも大きく動いており、
+主要指標ほど安定していない。この 2 つの差は主要指標ほどの重みでは読めない。
+
+\paragraph{再現性.}
+本研究は 2026 年 9 月 2 日に同一の設計で実行した先行ランの再実行であり、
+アーキテクチャ集合・初期化シードを固定しているため、8 ランすべての指標が
+先行ランと一致した。
 
 \section{考察}
 \label{sec:discussion}
 
-（実験実行前のため未記入。）
+\paragraph{中心仮説は棄却された。しかし一様にではない。}
+本研究が凍結した中心仮説——ZC プロキシの順位付け能力は入力データの内容に
+依存しない——は、jacob\_cov については\textbf{成り立たなかった}（C1, C4）。
+一方 snip については成り立った（C2）。
+したがって「ZC プロキシはデータを見ていない」という一般命題は誤りであり、
+正しい問いは\textbf{どのプロキシがどれだけ見ているか}である。
+
+この結論は設計から見れば後付けで納得のいくものである。
+jacob\_cov は定義上、ミニバッチ内の\emph{異なる入力}が誘導するヤコビアンの相関であり、
+入力集合の構造そのものを測っている。自然画像は互いに相関を持つが、
+独立な $N(0,1)$ テンソルは持たない。差が出る方が自然である。
+対して snip の $|\partial L/\partial\theta \odot \theta|$ は、
+勾配の\emph{大きさ}を全パラメータで総和した量であり、
+入力の内容よりもネットワークの規模と接続構造に支配される。
+
+\paragraph{最良のプロキシはデータを一切見ていない.}
+本研究で最も高い順位相関を示したのは synflow（$\airasval{comparative-5-synflow-cifar10.spearman_rho}$）であり、
+これは構成上\textbf{入力データを一度も参照しない}。
+jacob\_cov が実データを使って到達する $\airasval{comparative-1-jacobcov-cifar10.spearman_rho}$ を上回っている。
+Yang ら \cite{yang2023revisiting} は training-free 指標の性能の多くが
+\#Param との相関に由来すると論じたが、本研究の結果はそれと整合する形で、
+データを見ないことが性能上の不利にならない——むしろ本探索空間では有利ですらある——ことを示す。
+「入力に対する応答を測っているから効く」という説明は、
+少なくとも本探索空間においては、プロキシの性能を説明していない。
+
+\paragraph{先行研究との関係.}
+Mellor ら \cite{mellor2021naswot} は乱数入力で「傾向はほぼ変わらない」と報告したが、
+それは CIFAR-100 の 10 アーキテクチャに対する箱ひげ図の観察であった。
+1{,}000 アーキテクチャの順位相関として定量すると、jacob\_cov の
+$\Delta\rho$ は事前に置いた判定基準 $0.10$ を超える。
+定性的な「ほぼ変わらない」と、順位相関としての「変わる」は矛盾しない——
+スコア分布の見かけが保たれていても順位は崩れうる。実際 C5 が示すとおり、
+実入力と乱数入力のスコアは相関 $\airasval{comparative-7-jacobcov-realvsrand.spearman_rho}$ で強く結びついており、
+それでもなお真の精度との順位相関には無視できない差が出る。
+本研究の寄与は、この差に数値と判定基準を与えた点にある。
+
+\paragraph{判定基準の際どさについて.}
+C1 の $\Delta\rho$ は判定基準 $0.10$ をわずかに超えたにすぎず、
+基準が $0.15$ であれば結論は逆になっていた。この際どさは正直に記録されるべきである。
+ただし C4 はその解釈を助ける。シードのみを変えた複製ランとの差と比べると、
+入力差し替えの効果はノイズ水準では説明できない。
+C1 が僅差で棄却されたことと、効果がノイズより明確に大きいことは両立しており、
+「効果は実在するが小さい」というのが妥当な読み方である。
+
+\paragraph{実務上の含意.}
+探索の初期スクリーニングに ZC プロキシを使うなら、
+synflow のようにデータを参照しないプロキシは入力の選択に神経を使う必要がない。
+jacob\_cov を使う場合は、渡すミニバッチが対象タスクの実データであることが
+順位品質に効く。ただしその差はプロキシの選択（synflow と snip の差は主要指標で
+$\airasval{comparative-5-synflow-cifar10.spearman_rho}$ 対
+$\airasval{comparative-3-snip-cifar10.spearman_rho}$）より小さい。
+\textbf{どのデータを渡すかより、どのプロキシを使うかの方が効く。}
 
 \bibliographystyle{plain}
 \bibliography{references}
