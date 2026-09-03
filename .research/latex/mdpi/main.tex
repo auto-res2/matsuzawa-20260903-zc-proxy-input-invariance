@@ -1,0 +1,273 @@
+% ============================================================================
+% 事前登録版 (preregistration). このコミットの時点で実験は一切実行されていない。
+% 主張 C1-C5、判定基準、予測区間はすべてここで凍結される。
+% 実験値は airasval マクロ（<run_id>.<metric>）のみで書かれ、record.json の宣言と
+% 各 run の metrics.json から update_record が values.tex を生成して初めて実体化する。
+% 判定基準・予測区間は record.json の notes と本文に凍結される（record は
+% まだ派生値と判定をモデル化しない）。
+% 実験はすべてこのコミットの子孫で実行される。
+% ============================================================================
+\documentclass[11pt]{article}
+\usepackage{luatexja-fontspec}
+\setmainjfont{IPAexMincho}
+\setsansjfont{IPAexGothic}
+\usepackage[margin=25mm]{geometry}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{url}
+\usepackage[hidelinks]{hyperref}
+
+% 実験前は values.tex が存在しない (update_record が実験後に生成する)。
+% その間、各値が ??airasval:key?? として描画されるのが正しい事前登録状態である。
+\InputIfFileExists{values.tex}{}{}
+\providecommand{\airasval}[1]{\textbf{??airasval:\detokenize{#1}??}}
+\providecommand{\unverified}[1]{#1}
+
+\title{ゼロコストプロキシは入力データを見ているか\\
+\large NAS-Bench-201 における乱数入力置換の事前登録付き検証}
+\author{AIRAS 自動研究システム\\
+\small 実験実行（予定）: RIKYU (NVIDIA GB200, aarch64) via Seyval\ \ /\ \ 評価: airas-eval \texttt{nas\_pre\_training}}
+\date{2026年9月3日（事前登録版：実験実行前に凍結）}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+学習不要（training-free）のニューラルアーキテクチャ探索で用いられるゼロコストプロキシの多くは
+「単一ミニバッチの実データ」から計算されると説明され、その正当化も入力に対する応答に置かれている。
+しかし実データが予測力にどれだけ寄与しているかは定量化されていない。
+Mellor ら \cite{mellor2021naswot} は乱数入力でも「傾向が変わらない」ことを 10 アーキテクチャの
+箱ひげ図で定性的に示したのみである。本研究は、プロキシに渡す入力だけを実 CIFAR-10 ミニバッチから
+同形状・同統計の標準正規ノイズに置換するという最小介入により、入力データの実効的寄与を
+順位相関の差 $\Delta\rho = \rho_{\mathrm{real}} - \rho_{\mathrm{rand}}$ として定量する。
+NAS-Bench-201 \cite{dong2020nasbench201} から固定シードで抽出した 1{,}000 アーキテクチャを対象とし、
+真値は同ベンチマークの公表テスト精度を参照するのみで、アーキテクチャの学習は一切行わない（0 エポック）。
+中心となる主張は jacob\_cov の $\Delta\rho$ が 0.10 を超えないことである。
+構成上入力を使わない synflow をデータ非依存対照とし、初期化シードのみを変えた複製ランを
+ノイズ床として置き、さらにスコア水準の操作チェックを併置することで、
+「順位が動かない」ことが「介入が届いていない」ことの帰結でないことを保証する。
+すべての指標は外部の固定された評価層 airas-eval が算出し、実験コードは指標を一切計算しない。
+\end{abstract}
+
+\section{はじめに}
+
+ニューラルアーキテクチャ探索（NAS）の評価段階を高速化する手法として、
+学習を全く行わずにアーキテクチャを採点するゼロコストプロキシ（zero-cost proxy, 以下 ZC プロキシ）が
+広く使われている \cite{abdelfattah2021zerocost,mellor2021naswot}。
+これらは典型的には「学習データの単一ミニバッチを 1 回だけ順伝播・逆伝播させ、
+その勾配や活性から算出したスカラー」であり、その設計思想は
+「入力に対するネットワークの応答が、学習後の性能を予告する」という仮定に立っている。
+
+この仮定は、しかし、正面から検証されていない。むしろ疑う理由が二つある。
+
+第一に、Abdelfattah ら \cite{abdelfattah2021zerocost} の synflow は、損失を
+「全パラメータの積」として定義するため入力データを一切必要としない。
+にもかかわらず、NAS-Bench-201 の CIFAR-10 において、同論文が比較した単一プロキシの中で
+最も高い Spearman 順位相関 \unverified{0.74} を示す。
+データを見ないプロキシが、データを見るプロキシより良いのである。
+
+第二に、Yang ら \cite{yang2023revisiting} は、learning-free 指標の順位付け能力の大部分が
+パラメータ数 \#Param との相関に由来することを示した。
+NAS-Bench-201 における \#Param との Kendall $\tau$ は最大 \unverified{0.56} に達し、
+パラメータ数を揃えた部分空間では各指標の探索性能が劇的に低下する。
+
+両者を合わせると、「ZC プロキシが実際に測っているのは入力への応答ではなく、
+アーキテクチャ固有の量（規模・接続構造）ではないか」という仮説が立つ。
+本研究はこの仮説を、入力データ側を直接統制する介入によって検証する。
+
+\section{関連研究と本研究が埋める空白}
+
+\paragraph{ゼロコストプロキシ.}
+Abdelfattah ら \cite{abdelfattah2021zerocost} は枝刈り文献の saliency 指標
+（snip \cite{lee2019snip}, grasp, synflow \cite{tanaka2020synflow}, fisher）を
+ネットワーク全体の採点に転用し、Mellor ら \cite{mellor2021naswot} の jacob\_cov と合わせて
+NAS-Bench-201 の全 15{,}625 モデルで評価した。
+報告された CIFAR-10 の Spearman 順位相関は synflow \unverified{0.74}、
+jacob\_cov \unverified{0.73}、grad\_norm \unverified{0.58}、snip \unverified{0.58}、
+grasp \unverified{0.48}、fisher \unverified{0.36} である（数値は同論文 Table~1 の引用であり、
+本研究の測定値ではない）。
+
+\paragraph{入力依存性に触れた唯一の先行研究.}
+Mellor ら \cite{mellor2021naswot} は NASWOT スコアの頑健性のアブレーションとして、
+CIFAR-100 の 10 アーキテクチャに正規乱数入力を与えた箱ひげ図を示し、
+「傾向はほぼ変わらない」と述べている。しかしこれは 10 個のアーキテクチャに関する
+定性的な観察であって、探索空間規模での順位相関としての定量化ではない。
+本研究はこの空白を、$\Delta\rho$ という 1 つの数に還元して埋める。
+
+\paragraph{バイアス分析.}
+Krishnakumar ら \cite{krishnakumar2022nbsz} は 13 のプロキシを 28 タスクで統一実装のもと評価し、
+cell size などのバイアスを分析した。同研究が定めた「真の精度が上位 10\% の候補に限定した順位相関」
+のプロトコルを本研究も支持指標として採用する。ただし同研究のバイアス分析はアーキテクチャ側に限られ、
+入力データ側の寄与は分析されていない。
+
+\paragraph{本研究の位置づけ.}
+Yang ら \cite{yang2023revisiting} がアーキテクチャ側（\#Param）を統制したのに対し、
+本研究は入力データ側を統制する。両者は相補的であり、
+「プロキシはアーキテクチャを測っておりデータを測っていない」という同一の結論に
+両側から接近する。
+
+\section{仮説と予測}
+\label{sec:claims}
+
+以下の主張 C1--C5 は\textbf{実験実行前に凍結}したものである。
+各主張について、判定基準（これを満たさなければ棄却）と予測区間（期待される値の範囲）を分けて記す。
+判定基準は反証線であり、予測区間は期待である。
+予測区間を外れた結果は、判定基準を満たしていても第\ref{sec:discussion}節で論じる。
+
+\begin{description}
+
+\item[\textbf{C1}]（中心仮説：jacob\_cov の入力非依存性）
+jacob\_cov の真の精度に対する順位付け能力は、入力を実 CIFAR-10 ミニバッチから
+$N(0,1)$ 乱数テンソルに差し替えても実質的に変化しない。\\
+\textbf{判定基準}: $|\Delta\rho_{\mathrm{jacob\_cov}}| \le 0.10$。
+これを超えれば jacob\_cov は実データを実質的に利用しており、本主張は棄却される。\\
+\textbf{予測区間}: $\Delta\rho = 0.00$--$0.05$。根拠は Mellor ら \cite{mellor2021naswot} の
+定性的アブレーションと、Yang ら \cite{yang2023revisiting} が示した \#Param 依存性。
+参考として $\rho_{\mathrm{real}}$ は文献値 \unverified{0.73} 前後を予測する。\\
+\textbf{実測}: $\rho_{\mathrm{real}} = \airasval{comparative-1-jacobcov-cifar10.spearman_rho}$、
+$\rho_{\mathrm{rand}} = \airasval{proposed-jacobcov-randinput.spearman_rho}$。
+
+\item[\textbf{C2}]（snip の入力非依存性）
+snip の順位付け能力も、入力を乱数テンソルに差し替えて実質的に変化しない。\\
+\textbf{判定基準}: $|\Delta\rho_{\mathrm{snip}}| \le 0.10$。\\
+\textbf{予測区間}: $\Delta\rho = 0.00$--$0.08$。snip は損失勾配を経由するため
+jacob\_cov より入力依存が強い可能性があり、C1 より広い区間を置く。
+参考として $\rho_{\mathrm{real}}$ は文献値 \unverified{0.58} 前後を予測する。\\
+\textbf{実測}: $\rho_{\mathrm{real}} = \airasval{comparative-3-snip-cifar10.spearman_rho}$、
+$\rho_{\mathrm{rand}} = \airasval{comparative-4-snip-randinput.spearman_rho}$。
+
+\item[\textbf{C3}]（データ非依存対照：実験系の健全性）
+synflow は構成上入力データを使わないため、入力条件を変えても順位相関は厳密に一致する。\\
+\textbf{判定基準}: $|\Delta\rho_{\mathrm{synflow}}| \le 0.001$。
+これを超える場合、入力以外の要因が条件間で漏れていることを意味し、
+C1 と C2 の解釈は保留される。\\
+\textbf{予測区間}: $0.000$--$0.001$（理論上は厳密に $0$。浮動小数点の非決定性のみを許容）。
+根拠は Abdelfattah ら \cite{abdelfattah2021zerocost} 3.2.1 節の定義。\\
+\textbf{実測}: $\rho_{\mathrm{real}} = \airasval{comparative-5-synflow-cifar10.spearman_rho}$、
+$\rho_{\mathrm{rand}} = \airasval{comparative-6-synflow-randinput.spearman_rho}$。
+
+\item[\textbf{C4}]（シードノイズ床との比較）
+入力を実データから乱数に差し替えることの効果は、初期化シードを振り直すことの効果を超えない。\\
+\textbf{判定基準}: $|\Delta\rho_{\mathrm{jacob\_cov}}| \le |\Delta\rho_{\mathrm{seed}}| + 0.05$。
+これを超えれば、入力差し替えはシード揺らぎでは説明できない固有の効果を持つことになり棄却される。\\
+\textbf{予測区間}: $|\Delta\rho_{\mathrm{seed}}| = 0.00$--$0.05$。
+1{,}000 アーキテクチャ $\times$ 3 シード平均のもとでのシード揺らぎとして見積もった区間であり、
+事前の文献値はない。\\
+\textbf{実測}: $\rho_{\mathrm{rep}} = \airasval{comparative-2-jacobcov-cifar10rep.spearman_rho}$
+（$\Delta\rho_{\mathrm{seed}}$ は C1 の $\rho_{\mathrm{real}}$ との差）。
+
+\item[\textbf{C5}]（スコア水準の操作チェック）
+入力の差し替えは jacob\_cov のスコア値そのものには実際に到達しており、
+順位相関が動かないことはスコアが動いていないことの帰結ではない。\\
+\textbf{判定基準}: 乱数入力スコアと実入力スコアの Spearman 相関が $0.999$ 未満。
+$0.999$ 以上であれば実験系が入力を差し替えていない疑いが強く、C1 の解釈は無効となる。\\
+\textbf{予測区間}: $0.60$--$0.95$。スコアは入力で動くが順位情報は大きく保たれるという
+想定に基づく区間であり、事前の文献値はない。\\
+\textbf{実測}: $\airasval{comparative-7-jacobcov-realvsrand.spearman_rho}$。
+
+\end{description}
+
+\section{手法}
+
+\subsection{介入}
+
+同一のアーキテクチャ集合・同一の初期化シードに対し、ZC プロキシの入力だけを
+次の 2 条件に差し替え、それ以外を完全に固定する。
+
+\begin{itemize}
+\item \textbf{実データ条件 (cifar10)}: CIFAR-10 学習集合から取ったミニバッチ（バッチサイズ 128）。
+\item \textbf{乱数条件 (randinput)}: 同一形状・同一の正規化統計を持つ $N(0,1)$ 乱数テンソル。
+\end{itemize}
+
+入力データの実効的寄与を、真の精度との Spearman 順位相関の差
+\begin{equation}
+\Delta\rho \;=\; \rho_{\mathrm{real}} - \rho_{\mathrm{rand}}
+\end{equation}
+として定量する。$\rho$ はいずれもプロキシスコアと NAS-Bench-201 の公表テスト精度の間で測る。
+$\rho_{\mathrm{real}}$ と $\rho_{\mathrm{rand}}$ は別々のランの主要指標であり、
+本稿はそれぞれをランの記録から直接引用する。$\Delta\rho$ はその 2 値の差として本文で述べ、
+判定は凍結した基準に照らして行う。
+
+\subsection{評価対象のプロキシ}
+
+\begin{itemize}
+\item \textbf{jacob\_cov} \cite{mellor2021naswot}: ミニバッチ内の異なる入力が誘導する
+活性・ヤコビアンの相関に基づく。設計上もっとも強く入力に依存すると想定されるため中心に置く。
+\item \textbf{snip} \cite{lee2019snip}: $|\partial L/\partial\theta \odot \theta|$ を
+全パラメータで総和したもの。損失勾配を経由して入力に依存する。
+\item \textbf{synflow} \cite{tanaka2020synflow}: 損失を全パラメータの積として定義するため
+入力を使わない。データ非依存対照として置く。
+\end{itemize}
+
+データ漏洩を防ぐため、プロキシの計算にラベルは一切使用しない。
+
+\subsection{統制}
+
+順位が動かないという観察は、それ自体では「プロキシがデータを見ていない」ことを意味しない。
+実験系が入力を差し替え損ねていても同じ観察が得られるからである。
+これを排除するため 3 つの統制を置く。
+
+\begin{enumerate}
+\item \textbf{データ非依存対照}（C3）: synflow は入力を使わないため $\Delta\rho$ は厳密に $0$ でなければならない。
+\item \textbf{シードノイズ床}（C4）: 入力を実データに保ったまま初期化シード三つ組だけを
+$[0,1,2]$ から $[10,11,12]$ に変えた複製ランを走らせ、入力差し替えの効果を同じ尺度で比較する。
+\item \textbf{スコア水準の操作チェック}（C5）: 乱数入力スコアを predicted、実入力スコアを reference として
+Spearman 相関を測り、「スコアは動くが順位相関は動かない」のか「スコアすら動いていない」のかを分離する。
+\end{enumerate}
+
+\section{実験設計}
+\label{sec:setup}
+
+\paragraph{探索空間と真値.}
+NAS-Bench-201 \cite{dong2020nasbench201}（4 ノード 6 エッジの cell、演算 5 種、計 15{,}625 候補）。
+評価対象は固定シード 2026 で一様抽出した 1{,}000 アーキテクチャであり、
+全ランで同一の集合を用いる（条件間で比較可能にするための前提）。
+真値は同ベンチマークが公表する CIFAR-10 のテスト精度 (\texttt{eval\_acc1es}) を参照するのみで、
+\textbf{アーキテクチャの学習は一切行わない}（0 エポック、順伝播・逆伝播 各 1 回のみ）。
+
+\paragraph{ラン.}
+プロキシ 3 種 $\times$ 入力条件 2 種に、シード複製ランと操作チェックランを加えた計 8 ラン。
+各ランは 3 つの初期化シードでプロキシを計算し、その平均をアーキテクチャのスコアとする。
+ラン ID は \texttt{proposed-jacobcov-randinput}（中心となる介入条件）、
+\texttt{comparative-1-jacobcov-cifar10}、\texttt{comparative-2-jacobcov-cifar10rep}、
+\texttt{comparative-3-snip-cifar10}、\texttt{comparative-4-snip-randinput}、
+\texttt{comparative-5-synflow-cifar10}、\texttt{comparative-6-synflow-randinput}、
+\texttt{comparative-7-jacobcov-realvsrand} である。
+各ランは 1 回の dispatch で採点から評価層の実行までを通し、実行モードは
+\airasval{proposed-jacobcov-randinput.params.mode}（記録に宣言した条件を引用）である。
+各ランの結果は実行基盤の記録（実行 ID、コミット、出力ファイル）と突き合わせて検証される。
+
+\paragraph{指標.}
+主要指標は Spearman 順位相関 \texttt{spearman\_rho}、
+支持指標は \texttt{kendall\_tau}、\texttt{spearman\_rho\_top\_10pct}（真の上位 10\% に限定した順位相関
+\cite{krishnakumar2022nbsz}）、\texttt{precision\_at\_top\_10pct}。
+これらはすべて外部の固定された評価層 airas-eval の \texttt{nas\_pre\_training} タスクが算出する。
+\textbf{実験コードは指標を一切計算せず}、プロキシスコア \texttt{predicted\_scores} と
+真値 \texttt{reference\_scores} を書き出すのみである。
+どの指標を報告するかを選ぶ余地は設計上存在しない（タスク型が指標集合を決める）。
+
+\paragraph{実行環境.}
+RIKYU（BYO Slurm クラスタ、NVIDIA GB200、aarch64、partition=gpu）を Seyval 経由で使用する。
+CIFAR-10 と NAS-Bench-201 の参照表は同クラスタ上の既設キャッシュを読み取り専用で参照する。
+依存は \texttt{uv.lock} で固定し、リポジトリの Dockerfile をそのままビルドして実行するため、
+コミットハッシュだけで実行環境が決まる。
+スケールは sanity = 10 アーキテクチャ / 1 シード、pilot = 200 / 3 シード、full = 1{,}000 / 3 シードとする。
+
+% ===== airas: post-experiment sections, filled once runs exist =====
+
+\section{結果}
+\label{sec:results}
+
+% 実験実行後に記入する。主張 C1--C5 を第\ref{sec:claims}節で凍結した判定基準に
+% 照らして順に報告する。判定基準と予測区間は結果に合わせて変更しない。
+（実験実行前のため未記入。）
+
+\section{考察}
+\label{sec:discussion}
+
+（実験実行前のため未記入。）
+
+\bibliographystyle{plain}
+\bibliography{references}
+
+\end{document}
