@@ -1,0 +1,144 @@
+{
+  "hypotheses": [
+    {
+      "id": "h1",
+      "statement": "「データ依存」とされる zero-cost proxy (ZC proxy) の順位付け能力は、実際の入力データの内容にほとんど依存しない。入力を実 CIFAR-10 ミニバッチから同形状・同統計の N(0,1) 乱数テンソルに差し替えても、真の精度との Spearman 順位相関の差 delta_rho = rho_real - rho_rand は 0.10 を超えない。proxy スコアの値自体は入力によって変化するが、真の精度との順位相関はシードを振り直した程度の差しか生まない。反証条件: jacob_cov または snip のいずれかで |delta_rho| > 0.10 となれば、その proxy は実データを実質的に利用していることになり本仮説は棄却される。",
+      "claims": [
+        {
+          "id": "c1",
+          "statement": "jacob_cov の真の精度に対する順位付け能力は、入力を実 CIFAR-10 ミニバッチから N(0,1) 乱数テンソルに差し替えても実質的に変化しない。",
+          "designs": [
+            {
+              "id": "d1",
+              "summary": "同一の 1,000 アーキテクチャ（NAS-Bench-201、抽出シード 2026）・同一の初期化シード [0,1,2] に対し、jacob_cov の入力だけを実 CIFAR-10 ミニバッチ（batch 128）と N(0,1) 乱数テンソルに差し替えて採点し、NAS-Bench-201 公表の CIFAR-10 テスト精度との Spearman 順位相関を airas-eval (nas_pre_training) で算出する。学習は行わない。",
+              "runs": [
+                {
+                  "run_id": "comparative-1-jacobcov-cifar10",
+                  "description": "jacob_cov を実 CIFAR-10 ミニバッチ (batch 128) で計算。seeds=[0,1,2] の平均スコア。実データ参照条件。",
+                  "params": {
+                    "mode": "full",
+                    "evaluate": "true"
+                  }
+                },
+                {
+                  "run_id": "proposed-jacobcov-randinput",
+                  "description": "jacob_cov を N(0,1) 乱数テンソルで計算。seeds=[0,1,2]。中心となる介入条件。",
+                  "params": {
+                    "mode": "full",
+                    "evaluate": "true"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "c2",
+          "statement": "snip の真の精度に対する順位付け能力も、入力を乱数テンソルに差し替えて実質的に変化しない。",
+          "designs": [
+            {
+              "id": "d1",
+              "summary": "c1 と同一のアーキテクチャ集合・シードに対し、snip を実 CIFAR-10 ミニバッチと N(0,1) 乱数テンソルで採点し、順位相関を比較する。",
+              "runs": [
+                {
+                  "run_id": "comparative-3-snip-cifar10",
+                  "description": "snip を実 CIFAR-10 ミニバッチで計算。seeds=[0,1,2]。",
+                  "params": {
+                    "mode": "full",
+                    "evaluate": "true"
+                  }
+                },
+                {
+                  "run_id": "comparative-4-snip-randinput",
+                  "description": "snip を N(0,1) 乱数テンソルで計算。seeds=[0,1,2]。",
+                  "params": {
+                    "mode": "full",
+                    "evaluate": "true"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "c3",
+          "statement": "synflow は構成上入力データを使わないため、入力条件を変えても順位相関は厳密に一致する（データ非依存対照）。",
+          "designs": [
+            {
+              "id": "d1",
+              "summary": "c1 と同一のアーキテクチャ集合・シードに対し、synflow を両入力条件で採点する。synflow は損失を全パラメータの積として定義し入力を使わないため、2 条件の指標は厳密に一致しなければならない。一致しなければ入力以外の要因が条件間で漏れている。",
+              "runs": [
+                {
+                  "run_id": "comparative-5-synflow-cifar10",
+                  "description": "synflow を実 CIFAR-10 条件で計算。データ非依存対照。seeds=[0,1,2]。",
+                  "params": {
+                    "mode": "full",
+                    "evaluate": "true"
+                  }
+                },
+                {
+                  "run_id": "comparative-6-synflow-randinput",
+                  "description": "synflow を N(0,1) 乱数条件で計算。comparative-5 と厳密に一致することが期待される対照。seeds=[0,1,2]。",
+                  "params": {
+                    "mode": "full",
+                    "evaluate": "true"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "c4",
+          "statement": "入力を実データから乱数に差し替えることの効果は、初期化シードを振り直すことの効果を超えない。",
+          "designs": [
+            {
+              "id": "d1",
+              "summary": "入力を実 CIFAR-10 に保ったまま初期化シード三つ組だけを [10,11,12] に変えた複製ランを走らせ、c1 の comparative-1-jacobcov-cifar10 との差 delta_rho_seed をシードノイズ床とする。c1 の delta_rho_jacobcov（comparative-1 と proposed の差）をこの床と同じ尺度で比較する。",
+              "runs": [
+                {
+                  "run_id": "comparative-2-jacobcov-cifar10rep",
+                  "description": "jacob_cov を実 CIFAR-10 ミニバッチで計算、初期化シードのみ seeds=[10,11,12] に変更した複製ラン。シードノイズ床の統制。",
+                  "params": {
+                    "mode": "full",
+                    "evaluate": "true"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "c5",
+          "statement": "入力の差し替えは jacob_cov のスコア値そのものには実際に到達しており、順位相関が変化しないことはスコアが動いていないことの帰結ではない。",
+          "designs": [
+            {
+              "id": "d1",
+              "summary": "スコア水準の操作チェック。同一アーキテクチャ集合について、predicted_scores に乱数入力での jacob_cov スコア、reference_scores に実入力での jacob_cov スコアを与え、両者の Spearman 相関を airas-eval で測る。",
+              "runs": [
+                {
+                  "run_id": "comparative-7-jacobcov-realvsrand",
+                  "description": "predicted_scores に乱数入力での jacob_cov スコア、reference_scores に実入力での jacob_cov スコアを与え、両者の Spearman 相関を測る。",
+                  "params": {
+                    "mode": "full",
+                    "evaluate": "true"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "notes": [
+        "判定基準と予測区間（実験前に凍結。record はまだこれらをモデル化しないので、ここと論文の本文に記す）",
+        "C1 判定基準: |delta_rho_jacobcov| <= 0.10 で支持、超えれば棄却。予測区間 0.00-0.05。参考として rho_jacobcov_real は文献値 0.73 前後。",
+        "C2 判定基準: |delta_rho_snip| <= 0.10 で支持、超えれば棄却。予測区間 0.00-0.08。参考として rho_snip_real は文献値 0.58 前後。",
+        "C3 判定基準: |delta_rho_synflow| <= 0.001 で実験系は健全。超えれば C1, C2 の解釈は保留。予測区間 0.000-0.001。",
+        "C4 判定基準: |delta_rho_jacobcov| <= |delta_rho_seed| + 0.05 で支持、超えれば棄却。予測区間 |delta_rho_seed| = 0.00-0.05。",
+        "C5 判定基準: comparative-7-jacobcov-realvsrand.spearman_rho < 0.999 で介入はスコアに到達。0.999 以上なら C1 の解釈は無効。予測区間 0.60-0.95。",
+        "delta_rho は各 claim の 2 run の spearman_rho の差 (cifar10 - randinput) であり、record は派生値をまだモデル化しない (TODO)。論文では両 run の値を \\airasval で引き、差は本文で述べる。",
+        "スケール: sanity = 10 アーキ / 1 シード、pilot = 200 / 3 シード、full = 1000 / 3 シード。実行環境: RIKYU (BYO Slurm, NVIDIA GB200, aarch64) via Seyval、依存は uv.lock、自前 Dockerfile。"
+      ]
+    }
+  ]
+}
