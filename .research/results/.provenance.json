@@ -32,6 +32,17 @@
         "evaluate": "true"
       },
       "parameters": {}
+    },
+    "comparative-3-snip-cifar10": {
+      "execution_id": "bd0654f7-a6b7-4d87-b5f3-9c243667d464",
+      "commit_hash": "be1541600719e31c9b7abe7bc4402c1459feab68",
+      "overrides": {
+        "run": "comparative-3-snip-cifar10",
+        "results_dir": ".research/results",
+        "mode": "full",
+        "evaluate": "true"
+      },
+      "parameters": {}
     }
   }
 }
