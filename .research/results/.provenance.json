@@ -54,6 +54,17 @@
         "evaluate": "true"
       },
       "parameters": {}
+    },
+    "comparative-5-synflow-cifar10": {
+      "execution_id": "20314995-703b-4ef9-8d3a-55e685f1f06e",
+      "commit_hash": "be1541600719e31c9b7abe7bc4402c1459feab68",
+      "overrides": {
+        "run": "comparative-5-synflow-cifar10",
+        "results_dir": ".research/results",
+        "mode": "full",
+        "evaluate": "true"
+      },
+      "parameters": {}
     }
   }
 }
