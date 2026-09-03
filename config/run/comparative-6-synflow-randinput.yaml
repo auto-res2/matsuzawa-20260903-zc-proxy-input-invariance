@@ -1,0 +1,7 @@
+# @package run
+run_id: comparative-6-synflow-randinput
+proxy: synflow
+condition: randinput
+task: score
+seeds: [0, 1, 2]
+description: "synflow / 乱数条件（comparative-5 と厳密一致するはず）"

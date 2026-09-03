@@ -1,0 +1,7 @@
+# @package run
+run_id: comparative-4-snip-randinput
+proxy: snip
+condition: randinput
+task: score
+seeds: [0, 1, 2]
+description: "snip / N(0,1) 乱数入力"

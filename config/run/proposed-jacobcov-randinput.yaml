@@ -1,0 +1,7 @@
+# @package run
+run_id: proposed-jacobcov-randinput
+proxy: jacob_cov
+condition: randinput
+task: score
+seeds: [0, 1, 2]
+description: "jacob_cov / N(0,1) 乱数入力（中心となる介入条件）"

@@ -50,5 +50,10 @@ COPY . .
 # Create results directory
 RUN mkdir -p .research/results
 
-# Default command (can be overridden in workflow)
-CMD ["bash"]
+# Default command (overridden by the executor's command_args in practice).
+# A bare `docker run` should still do something meaningful rather than drop to a
+# shell, so the default is the contract CLI for the central intervention run.
+CMD ["uv", "run", "--no-sync", "python", "-u", "-m", "src.main", \
+     "run=proposed-jacobcov-randinput", \
+     "results_dir=.research/results", \
+     "mode=full"]

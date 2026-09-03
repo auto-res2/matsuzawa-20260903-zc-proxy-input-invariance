@@ -1,0 +1,7 @@
+# @package run
+run_id: comparative-2-jacobcov-cifar10rep
+proxy: jacob_cov
+condition: cifar10
+task: score
+seeds: [10, 11, 12]
+description: "jacob_cov / 実データ、シードのみ変更（シードノイズ床）"

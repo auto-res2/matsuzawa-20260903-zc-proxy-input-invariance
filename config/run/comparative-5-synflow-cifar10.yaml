@@ -1,0 +1,7 @@
+# @package run
+run_id: comparative-5-synflow-cifar10
+proxy: synflow
+condition: cifar10
+task: score
+seeds: [0, 1, 2]
+description: "synflow / 実データ条件（構成上入力を使わないデータ非依存対照）"

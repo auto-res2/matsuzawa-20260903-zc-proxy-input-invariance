@@ -1,23 +1,27 @@
-# Please list the required python packages in `dependencies` below.
-# Keep this file limited to dependencies (hydra-core, wandb, plus
-# task-specific libraries).
+# 依存のみ。実行環境は uv.lock と Dockerfile で固定される。
 
 [project]
 name = "experiment"
 version = "0.1.0"
-requires-python = ">=3.11"
+requires-python = ">=3.11,<3.12"
 dependencies = [
     "hydra-core",
     "wandb",
+    # torch 2.11 系。2.7 系は triton==3.3.0 を引くが triton 3.3.0 は x86_64 wheel
+    # しか公開しておらず、実行先の aarch64 (RIKYU / GB200) でビルドが落ちる。
+    # 2.11 系が引く triton 3.6.0 には aarch64 wheel がある。
+    "torch==2.11.0",
+    "numpy",
+    "matplotlib",
 ]
 
-# `src/` is run with `uv run python -m src.main` from the repository root,
-# never installed as a distribution, so this project is not a package.
+# `src/` は `uv run python -m src.main` でリポジトリ root から実行され、
+# 配布物としてインストールされることはない。
 [tool.uv]
 package = false
 
-# Evaluation layer (managed by AIRAS). Pinned so the reported metrics are
-# reproducible; experiment code must NOT import airas_eval — it is invoked only
-# through `make evaluate` / the airas-eval CLI on the eval_inputs files.
+# 評価層 (AIRAS 管理)。報告される指標を再現可能にするためピンする。
+# 実験コードは airas_eval を import してはならない — `make evaluate` /
+# airas-eval CLI から eval_inputs のファイルに対してのみ起動される。
 [dependency-groups]
 eval = ["airas-eval==0.10.0"]

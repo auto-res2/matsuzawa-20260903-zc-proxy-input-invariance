@@ -1,0 +1,7 @@
+# @package run
+run_id: comparative-1-jacobcov-cifar10
+proxy: jacob_cov
+condition: cifar10
+task: score
+seeds: [0, 1, 2]
+description: "jacob_cov / 実 CIFAR-10 ミニバッチ（実データ参照条件）"

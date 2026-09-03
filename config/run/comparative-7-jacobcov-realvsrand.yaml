@@ -1,0 +1,7 @@
+# @package run
+run_id: comparative-7-jacobcov-realvsrand
+proxy: jacob_cov
+condition: cifar10
+task: realvsrand
+seeds: [0, 1, 2]
+description: "スコア水準の操作チェック: 乱数入力スコア vs 実入力スコア"

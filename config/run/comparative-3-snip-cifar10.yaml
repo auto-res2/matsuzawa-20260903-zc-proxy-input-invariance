@@ -1,0 +1,7 @@
+# @package run
+run_id: comparative-3-snip-cifar10
+proxy: snip
+condition: cifar10
+task: score
+seeds: [0, 1, 2]
+description: "snip / 実 CIFAR-10 ミニバッチ"

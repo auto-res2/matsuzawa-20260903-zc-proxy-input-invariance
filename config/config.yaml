@@ -1,18 +1,56 @@
-# Main configuration for Hydra
-# This file will be populated by AI code generator based on experimental design
-
+# 共通設定。run= で config/run/*.yaml を 1 つ選ぶ。
 defaults:
   - _self_
-  - run: ???  # loads from config/run/, accessible as 'run=' in CLI
+  - run: ???
 
-# Execution mode: full, sanity, or pilot
+# 実行モード: full / sanity / pilot
 mode: full
 
-# Results output directory
+# 結果出力先
 results_dir: .research/results
 
-# WandB configuration (will be set by AI agent)
+# true にすると src.main が推論のあとに `make evaluate` と src.evaluate を同じ
+# プロセス木で続けて走らせ、1 回の dispatch で metrics.json まで書く。
+# 実行基盤は run ごとに作業ディレクトリが新品なので、評価を別 run に分けると
+# 前段の出力が見えない。argv を平坦に保つため（記録との照合は argv の
+# key=value を読む）シェルで連結せずこのフラグで繋ぐ。
+evaluate: false
+
+# モード別スケール。データセットとモデルはモードによらず同一で、規模だけを縮める。
+modes:
+  sanity:
+    n_archs: 10
+    seeds_limit: 1
+  pilot:
+    n_archs: 200
+    seeds_limit: 3
+  full:
+    n_archs: 1000
+    seeds_limit: 3
+
+data:
+  # RIKYU 上の既設キャッシュ。計算ノードからは read-only でバインドされる。
+  cache_dir: /data1/rkp00041/rku00122/.airas-cache
+  nb201_pickle: ${data.cache_dir}/nb201_all.pickle
+  cifar_dir: ${data.cache_dir}/cifar-10-batches-py
+  # 真値として引く NAS-Bench-201 のデータセット列
+  dataset_key: cifar10
+  # 全ランで同一のアーキテクチャ集合を使うための固定シード
+  arch_sample_seed: 2026
+  batch_size: 128
+
+# src/evaluate.py 用（run= とは独立に集計対象を渡す）
+run_ids: []
+
 wandb:
-  entity: ???
-  project: ???
-  mode: online
+  entity: ""
+  project: zc-proxy-input-invariance
+  # 資格情報に依存せず実行できるよう既定は offline。
+  # W&B は補助的なログであり、報告される指標の出所は airas-eval のみである。
+  mode: offline
+
+hydra:
+  run:
+    dir: .logs/${run.run_id}/${mode}
+  job:
+    chdir: false
