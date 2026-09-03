@@ -65,6 +65,17 @@
         "evaluate": "true"
       },
       "parameters": {}
+    },
+    "comparative-6-synflow-randinput": {
+      "execution_id": "6369b671-10a3-4404-8976-8d01662b24c8",
+      "commit_hash": "be1541600719e31c9b7abe7bc4402c1459feab68",
+      "overrides": {
+        "run": "comparative-6-synflow-randinput",
+        "results_dir": ".research/results",
+        "mode": "full",
+        "evaluate": "true"
+      },
+      "parameters": {}
     }
   }
 }
