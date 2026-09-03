@@ -1,0 +1,15 @@
+{
+  "dirs": {
+    "comparative-1-jacobcov-cifar10": {
+      "execution_id": "6edf69b5-368d-4c0d-85f0-57780806763c",
+      "commit_hash": "be1541600719e31c9b7abe7bc4402c1459feab68",
+      "overrides": {
+        "run": "comparative-1-jacobcov-cifar10",
+        "results_dir": ".research/results",
+        "mode": "full",
+        "evaluate": "true"
+      },
+      "parameters": {}
+    }
+  }
+}
