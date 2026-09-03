@@ -129,6 +129,65 @@
           ]
         }
       ],
+      "tables": [
+        {
+          "key": "zc_summary",
+          "caption": "NAS-Bench-201 (CIFAR-10, 1000 アーキテクチャ) 上の zero-cost proxy と真のテスト精度の順位相関。入力条件は実 CIFAR-10 ミニバッチ (cifar10) と N(0,1) 乱数テンソル (randinput)。学習は一切行っていない。各値は airas-eval が算出した各 run の metrics.json から引用。",
+          "label": "tab:zc_summary",
+          "columns": [
+            {
+              "header": "Spearman $\\rho$",
+              "ref_path": "spearman_rho",
+              "round": 3
+            },
+            {
+              "header": "Kendall $\\tau$",
+              "ref_path": "kendall_tau",
+              "round": 3
+            },
+            {
+              "header": "$\\rho$ (top 10\\%)",
+              "ref_path": "spearman_rho_top_10pct",
+              "round": 3
+            },
+            {
+              "header": "P@top10\\%",
+              "ref_path": "precision_at_top_10pct",
+              "round": 3
+            }
+          ],
+          "rows": [
+            {
+              "run_id": "comparative-1-jacobcov-cifar10",
+              "label": "jacob\\_cov / cifar10"
+            },
+            {
+              "run_id": "proposed-jacobcov-randinput",
+              "label": "jacob\\_cov / randinput"
+            },
+            {
+              "run_id": "comparative-2-jacobcov-cifar10rep",
+              "label": "jacob\\_cov / cifar10 (seed rep.)"
+            },
+            {
+              "run_id": "comparative-3-snip-cifar10",
+              "label": "snip / cifar10"
+            },
+            {
+              "run_id": "comparative-4-snip-randinput",
+              "label": "snip / randinput"
+            },
+            {
+              "run_id": "comparative-5-synflow-cifar10",
+              "label": "synflow / cifar10"
+            },
+            {
+              "run_id": "comparative-6-synflow-randinput",
+              "label": "synflow / randinput"
+            }
+          ]
+        }
+      ],
       "notes": [
         "判定基準と予測区間（実験前に凍結。record はまだこれらをモデル化しないので、ここと論文の本文に記す）",
         "C1 判定基準: |delta_rho_jacobcov| <= 0.10 で支持、超えれば棄却。予測区間 0.00-0.05。参考として rho_jacobcov_real は文献値 0.73 前後。",
