@@ -54,7 +54,7 @@ jobs:
     timeout-minutes: 45
     # The PDF commit this workflow makes lands on the branch and would
     # otherwise start it again (a fresh build differs in timestamps alone).
-    if: ${{ github.event_name != 'push' || !startsWith(github.event.head_commit.message, 'paper: CI-built PDF') }}
+    if: "${{ github.event_name != 'push' || !startsWith(github.event.head_commit.message, 'paper: CI-built PDF') }}"
 
     steps:
       - name: Checkout repository
