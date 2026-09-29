@@ -24,4 +24,4 @@ package = false
 # 実験コードは airas_eval を import してはならない — `make evaluate` /
 # airas-eval CLI から eval_inputs のファイルに対してのみ起動される。
 [dependency-groups]
-eval = ["airas-eval==0.10.0"]
+eval = ["airas-eval==0.11.1"]
